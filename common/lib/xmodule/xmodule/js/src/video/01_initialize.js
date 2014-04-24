@@ -14,8 +14,8 @@
 
 define(
 'video/01_initialize.js',
-['video/03_video_player.js', 'video/00_video_storage.js'],
-function (VideoPlayer, VideoStorage) {
+['video/03_video_player.js', 'video/00_video_storage.js', 'video/00_i18n.js'],
+function (VideoPlayer, VideoStorage, i18n) {
     /**
      * @function
      *
@@ -39,7 +39,7 @@ function (VideoPlayer, VideoStorage) {
                     return false;
                 }
 
-                _initializeModules(state)
+                _initializeModules(state, i18n)
                     .done(function () {
                         // On iPad ready state occurs just after start playing.
                         // We hide controls before video starts playing.
@@ -341,11 +341,11 @@ function (VideoPlayer, VideoStorage) {
         state.captionHideTimeout = null;
     }
 
-    function _initializeModules(state) {
+    function _initializeModules(state, i18n) {
         var dfd = $.Deferred(),
             modulesList = $.map(state.modules, function(module) {
                 if ($.isFunction(module)) {
-                    return module(state);
+                    return module(state, i18n);
                 } else if ($.isPlainObject(module)) {
                     return module;
                 }
@@ -419,6 +419,10 @@ function (VideoPlayer, VideoStorage) {
                         }
 
                         return value;
+                     },
+                    'score': function (value) {
+
+                        return storage.getItem('score', true) || value;
                      }
                 },
                 config = {};
@@ -480,6 +484,8 @@ function (VideoPlayer, VideoStorage) {
     function initialize(element) {
         var self = this,
             el = $(element).find('.video'),
+            progressElement = $(element).find('.problem-progress'),
+            statusElement = $(element).find('.problem-feedback'),
             container = el.find('.video-wrapper'),
             id = el.attr('id').replace(/video_/, ''),
             __dfd__ = $.Deferred(),
@@ -493,6 +499,8 @@ function (VideoPlayer, VideoStorage) {
         $.extend(this, {
             __dfd__: __dfd__,
             el: el,
+            progressElement: progressElement,
+            statusElement: statusElement,
             container: container,
             currentVolume: 100,
             id: id,
@@ -774,11 +782,18 @@ function (VideoPlayer, VideoStorage) {
     }
 
     function saveState(async, data) {
+        var state;
 
         if (!($.isPlainObject(data))) {
             data = {
                 saved_video_position: this.videoPlayer.currentTime
             };
+        }
+
+        if (this.videoGrader) {
+            state = JSON.stringify(this.videoGrader.getStates());
+            data['cumulative_score'] = state;
+            this.storage.setItem('cumulative_score', state, true);
         }
 
         if (data.speed) {
@@ -794,6 +809,7 @@ function (VideoPlayer, VideoStorage) {
         $.ajax({
             url: this.config.saveStateUrl,
             type: 'POST',
+            notifyOnError: false,
             async: async ? true : false,
             dataType: 'json',
             data: data,
