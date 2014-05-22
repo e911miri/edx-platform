@@ -151,8 +151,8 @@ function (AbstractGrader) {
                 // We're going to receive 1-2 events `progress` for each
                 // timeline position for the small videos to be more precise and
                 // to avoid some issues with invoking of timers.
-                if (waitTime <= 500) {
-                    this.size = interval / 500;
+                if (waitTime <= 1000) {
+                    this.size = interval / 1000;
                     this.coef = 100 / this.size;
                 }
 
@@ -176,9 +176,11 @@ function (AbstractGrader) {
                     (time - this.range.start) * this.size / this.range.size
                 );
 
-                this.timeline[position] = 1;
-                if (this.getProgress(this.timeline) >= this.graderValue) {
-                    this.dfd.resolve();
+                if (!this.timeline[position]) {
+                    this.timeline[position] = 1;
+                    if (this.getProgress(this.timeline) >= this.graderValue) {
+                        this.dfd.resolve();
+                    }
                 }
             }
         },

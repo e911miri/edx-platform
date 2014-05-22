@@ -290,7 +290,7 @@ describe('VideoGrader', function () {
         });
 
         it('shows success message if duration is less than 20s', function () {
-            state.videoPlayer.duration.andReturn(1);
+            state.videoPlayer.duration.andReturn(2);
             state.config.graders.scored_on_percent.graderValue = 50;
             new Grader(state, i18n);
             state.el.trigger('play');
@@ -302,7 +302,7 @@ describe('VideoGrader', function () {
 
             expect($('.problem-feedback').text()).toBe(SUCCESS_MESSAGE);
             expect(state.videoGrader).assertState({
-                'scored_on_percent': createStateList(3, 1)
+                'scored_on_percent': createStateList(2, 1)
             });
         });
 
