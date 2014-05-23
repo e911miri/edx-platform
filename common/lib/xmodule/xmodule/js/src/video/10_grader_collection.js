@@ -41,13 +41,19 @@ function (AbstractGrader) {
         name: 'basic_grader',
 
         getGrader: function (element) {
-            var downloadButton =  this.state.el.find('.video-download-button'),
-                dfd = $.Deferred();
+            var downloadButton =  this.state.el.find('.video-download-button');
 
-            element.on('play', dfd.resolve);
-            downloadButton.on('click', dfd.resolve);
+            this.dfd = $.Deferred();
+            element.on('play', this.dfd.resolve);
+            downloadButton.on('click', this.onDownloadHandler.bind(this));
 
-            return dfd.promise();
+            return this.dfd.promise();
+        },
+
+        onDownloadHandler: function () {
+            // We have to wait for a some time, otherwise browser might cancel
+            // the request.
+            setTimeout(this.dfd.resolve, 25);
         }
     });
 
@@ -59,9 +65,15 @@ function (AbstractGrader) {
 
             this.dfd = $.Deferred();
             element.on('play', _.once(this.onPlayHandler.bind(this)));
-            downloadButton.on('click', this.dfd.resolve);
+            downloadButton.on('click', this.onDownloadHandler.bind(this));
 
             return this.dfd.promise();
+        },
+
+        onDownloadHandler: function () {
+            // We have to wait for a some time, otherwise browser might cancel
+            // the request.
+            setTimeout(this.dfd.resolve, 25);
         },
 
         onPlayHandler: function (event, time) {
@@ -71,8 +83,9 @@ function (AbstractGrader) {
                     duration = range.duration,
                     eventName = (size === duration) ? 'ended' : 'endTime';
 
-                this.element.on(eventName, this.dfd.resolve);
-                this.element.on('seek', this.onSeekHandler.bind(this));
+                this.element
+                    .on(eventName, this.dfd.resolve)
+                    .on('seek', this.onSeekHandler.bind(this));
             }.bind(this), 0);
         },
 
