@@ -780,7 +780,8 @@ class MultipleChoiceResponse(LoncapaResponse):
         for response in self.xml.xpath("choicegroup"):
             # Is Masking enabled? -- check for shuffle or answer-pool features
             ans_str = response.get("answer-pool")
-            if response.get("shuffle") == "true" or (ans_str is not None and ans_str != "0"):
+            # Temporarily turning off masking
+            if False and (response.get("shuffle") == "true" or (ans_str is not None and ans_str != "0")):
                 self._has_mask = True  # pylint: disable=W0201
                 self._mask_dict = {}   # pylint: disable=W0201
                 # We do not want the random mask names to be the same
